@@ -3,7 +3,7 @@ const fetchGitHubApi = (owner, repo, path) =>
     headers: { Accept: 'application/vnd.github.v3+json' },
   });
 
-export const getGitHubData = (owner, repo) => {
+export default function getGitHubData(owner, repo) {
   let weeklyCommits = 0;
 
   // get weekly commits for last year: https://docs.github.com/en/rest/reference/repos#get-the-weekly-commit-count
@@ -21,6 +21,7 @@ export const getGitHubData = (owner, repo) => {
       document.getElementById(`yearly-commits-${repo}`).innerHTML = data.all.reduce(
         (a, b) => a + b
       );
+      return data;
     })
     .catch((error) => console.log(error));
 
@@ -29,12 +30,14 @@ export const getGitHubData = (owner, repo) => {
     .then((res) => res.json())
     .then((data) => {
       if (weeklyCommits) {
-        document.getElementById(`lines-added-${repo}`).innerHTML = data[data.length - 1][1];
-        document.getElementById(`lines-removed-${repo}`).innerHTML = data[data.length - 1][2];
+        const [, linesAdded, linesRemoved] = data[data.length - 1];
+        document.getElementById(`lines-added-${repo}`).innerHTML = linesAdded;
+        document.getElementById(`lines-removed-${repo}`).innerHTML = linesRemoved;
       } else {
         document.getElementById(`new-lines-${repo}`).innerHTML =
           '<p class="mb-0">No commits this week<p/>';
       }
+      return data;
     })
     .catch((error) => console.log(error));
 
@@ -57,6 +60,7 @@ export const getGitHubData = (owner, repo) => {
       document.getElementById(`latest-author-commit-${repo}`).innerHTML = shortSha;
       document.getElementById(`latest-author-commit-${repo}`).title = shortSha;
       document.getElementById(`latest-author-commit-${repo}`).href = commitURL;
+      return data;
     })
     .catch((error) => console.log(error));
 
@@ -66,6 +70,7 @@ export const getGitHubData = (owner, repo) => {
     .then((data) => {
       const contributors = data.match(/.*"next".*&page=([0-9]*).*"last".*/)[1];
       document.getElementById(`total-contributors-${repo}`).innerHTML = contributors;
+      return data;
     })
     .catch((error) => console.log(error));
-};
+}
