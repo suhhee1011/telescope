@@ -11,8 +11,13 @@ export const getGitHubData = (owner, repo) => {
     .then((res) => res.json())
     .then((data) => {
       weeklyCommits = data.all[data.all.length - 1];
+      console.log(repo);
+      if (weeklyCommits > 0) {
+        document.getElementById(`weekly-commits-${repo}-dom`).style.visibility = 'visible';
+      } else {
+        document.getElementById(`weekly-commits-${repo}-dom`).style.visibility = 'hidden';
+      }
       document.getElementById(`weekly-commits-${repo}`).innerHTML = weeklyCommits;
-
       document.getElementById(`yearly-commits-${repo}`).innerHTML = data.all.reduce(
         (a, b) => a + b
       );
