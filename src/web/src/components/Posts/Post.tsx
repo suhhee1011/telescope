@@ -8,6 +8,7 @@ import {
   ListSubheader,
   createStyles,
   useMediaQuery,
+  Chip,
 } from '@material-ui/core';
 import ErrorRoundedIcon from '@material-ui/icons/ErrorRounded';
 import { Post } from '../../interfaces';
@@ -16,9 +17,12 @@ import Spinner from '../Spinner';
 import PostDesktopInfo from './PostInfo';
 import PostAvatar from './PostAvatar';
 import GitHubInfo from './GitHubInfo';
+import ShareButton from './ShareButton';
 
 type Props = {
   postUrl: string;
+  currentPost?: number;
+  totalPosts?: number;
 };
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -98,6 +102,25 @@ const useStyles = makeStyles((theme: Theme) =>
         marginLeft: '.1em',
       },
     },
+    postCount: {
+      marginRight: '16px',
+      display: 'flex',
+      justifyContent: 'flex-end',
+      [theme.breakpoints.down(1024)]: {
+        margin: '0 2em 0.05em 0',
+      },
+      [theme.breakpoints.down(600)]: {
+        margin: '0 0 0.05em 0',
+      },
+    },
+    chipComponent: {
+      border: `1px solid ${theme.palette.primary.main}`,
+      color: `${theme.palette.text.primary}`,
+      fontSize: '0.75em',
+      [theme.breakpoints.down(1024)]: {
+        fontSize: '.65em',
+      },
+    },
     expandHeader: {
       whiteSpace: 'normal',
       cursor: 'pointer',
@@ -158,9 +181,6 @@ const useStyles = makeStyles((theme: Theme) =>
         fontSize: '1.1em',
         height: '5px',
         margin: '-1.6em 1em -1em .5px',
-      },
-      '&:hover': {
-        textDecorationLine: 'underline',
       },
     },
     authorAvatarContainer: {
@@ -235,7 +255,7 @@ const extractGitHubUrlsFromPost = (htmlString: string): string[] => {
   );
 };
 
-const PostComponent = ({ postUrl }: Props) => {
+const PostComponent = ({ postUrl, currentPost, totalPosts }: Props) => {
   const classes = useStyles();
   const theme = useTheme();
   const desktop = useMediaQuery(theme.breakpoints.up(1205));
@@ -279,7 +299,7 @@ const PostComponent = ({ postUrl }: Props) => {
           </Typography>
         </ListSubheader>
 
-        <Grid container justify="center">
+        <Grid container justifyContent="center">
           <Grid item className={classes.spinner}>
             <Spinner />
           </Grid>
@@ -290,6 +310,16 @@ const PostComponent = ({ postUrl }: Props) => {
 
   return (
     <Box className={classes.root}>
+      {currentPost && totalPosts && (
+        <div className={classes.postCount}>
+          <Chip
+            label={`${currentPost.toLocaleString()} of ${totalPosts.toLocaleString()}`}
+            variant="outlined"
+            className={classes.chipComponent}
+          />
+        </div>
+      )}
+
       <ListSubheader className={classes.postInfo}>
         <div className={classes.titleContainer}>
           <Typography variant="h1" title={post.title} id={post.id} className={classes.title}>
@@ -321,7 +351,10 @@ const PostComponent = ({ postUrl }: Props) => {
                 <a href={post.url} rel="bookmark" className={classes.link}>
                   {`${formatPublishedDate(post.updated)}`}
                 </a>
+
+                <ShareButton url={post.url} />
               </h1>
+
               <div>
                 <AdminButtons />
               </div>
