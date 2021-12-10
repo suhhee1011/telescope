@@ -1,7 +1,8 @@
 const { Router, logger, isAuthenticated, isAuthorized } = require('@senecacdot/satellite');
 const Feed = require('../data/feed');
-const { getFeeds, getInvalidFeeds } = require('../storage');
+const { getFeeds, getInvalidFeeds, getDelayedFeeds } = require('../storage');
 const { validateNewFeed, validateFeedsIdParam } = require('../validation');
+const queue = require('../queue');
 
 const feeds = Router();
 
@@ -43,6 +44,34 @@ feeds.get('/invalid', async (req, res, next) => {
       url: `${feedURL}/${element.id}`,
     }))
   );
+});
+
+feeds.get('/delayed', async (req, res, next) => {
+  let delayedFeeds;
+  try {
+    delayedFeeds = await getDelayedFeeds();
+  } catch (error) {
+    logger.error({ error }, 'Unable to get delayed feeds from Redis');
+    return next(error);
+  }
+  res.set('X-Total-Count', delayedFeeds.length);
+  return res.json(
+    delayedFeeds.map((element) => ({
+      ...element,
+      url: `${feedURL}/${element.id}`,
+    }))
+  );
+});
+
+feeds.get('/info', async (req, res, next) => {
+  try {
+    const [jobCnt, queueInfo] = await Promise.all([queue.count(), queue.getJobCounts()]);
+    queueInfo.jobCnt = jobCnt;
+    res.json({ queueInfo });
+  } catch (error) {
+    logger.error({ error }, 'Unable to get information from feed-queue');
+    next(error);
+  }
 });
 
 feeds.get('/:id', validateFeedsIdParam(), async (req, res, next) => {
